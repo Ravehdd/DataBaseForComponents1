@@ -4,10 +4,10 @@ from .models import *
 
 
 class IndexSerializer(serializers.ModelSerializer):
-
+    category_name = serializers.CharField(source='category.cat_name')
     class Meta:
         model = Components
-        fields = ("comp_id", "comp_name", "amount")
+        fields = ("comp_id", "comp_name", "amount", "category_name")
 
 
 class CompSerializer(serializers.Serializer):
@@ -18,11 +18,12 @@ class CompSerializer(serializers.Serializer):
 class UpdateSerializer(serializers.Serializer): # new
     comp_name = serializers.CharField(max_length=255)
     # new_comp_name = serializers.CharField(max_length=255)
-    category = serializers.IntegerField()
+    category = serializers.CharField()
     amount_add = serializers.IntegerField()
 
 
 class ShowSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     comp_name = serializers.CharField(max_length=255)
     in_stock = serializers.IntegerField()
     amount_need = serializers.IntegerField()

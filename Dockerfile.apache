@@ -1,0 +1,4 @@
+FROM httpd:2.4
+
+COPY ./dbsite/static /usr/local/apache2/htdocs/
+

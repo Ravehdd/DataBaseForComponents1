@@ -11,3 +11,4 @@ class DataMixin:
         connection = Connection.objects.all()
         cats = Category.objects.all()
         return context
+
