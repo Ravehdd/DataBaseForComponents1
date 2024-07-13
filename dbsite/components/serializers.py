@@ -23,6 +23,7 @@ class UpdateSerializer(serializers.Serializer): # new
 
 
 class ShowSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     comp_name = serializers.CharField(max_length=255)
     in_stock = serializers.IntegerField()
     amount_need = serializers.IntegerField()

@@ -51,6 +51,7 @@ class OrderData(models.Model):
     amount_need = models.IntegerField()
     cat = models.IntegerField()
     enough = models.BooleanField(default=True)
+    order_id = models.IntegerField(null=True)
 
 
 class Replace(models.Model):
@@ -62,3 +63,12 @@ class Replace(models.Model):
         return self.comp_name
 
 
+class Orders(models.Model):
+    device = models.ForeignKey("Devices", on_delete=models.PROTECT)
+    amount_devices = models.IntegerField()
+
+
+class ReplacedComponents(models.Model):
+    order = models.ForeignKey("Orders", on_delete=models.PROTECT)
+    old_comp = models.IntegerField()
+    new_comp = models.ForeignKey("Components", on_delete=models.PROTECT, null=False)
