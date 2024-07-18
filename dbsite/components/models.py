@@ -66,9 +66,10 @@ class Replace(models.Model):
 class Orders(models.Model):
     device = models.ForeignKey("Devices", on_delete=models.PROTECT)
     amount_devices = models.IntegerField()
+    date = models.DateTimeField(auto_now_add=True, null=True)
 
 
 class ReplacedComponents(models.Model):
-    order = models.ForeignKey("Orders", on_delete=models.PROTECT)
+    order = models.ForeignKey("Orders", on_delete=models.CASCADE)
     old_comp = models.IntegerField()
     new_comp = models.ForeignKey("Components", on_delete=models.PROTECT, null=False)

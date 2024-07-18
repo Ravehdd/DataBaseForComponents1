@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import *
 from .utils import *
+
 import sqlite3
 from django.views.decorators.cache import cache_page
 from django.core.cache import cache
@@ -112,7 +113,7 @@ class ShowOrderAPI(APIView):
             OrderData.objects.filter(comp_name=comp_name[i]).update(in_stock=amount)
             Components.objects.filter(comp_name=comp_name[i]).update(amount=amount)
 
-        return Response({"order_data": ShowSerializer(info, many=True).data})
+        return Response({"status": 200, "order_data": ShowSerializer(info, many=True).data})
 
 
 class ReplaceAPI(APIView):
@@ -120,7 +121,7 @@ class ReplaceAPI(APIView):
     def get(self, request):
         # comps_to_replace = Replace.objects.all().values_list("comp_name", flat=True)
         comp_name = OrderData.objects.filter(enough=0).values("comp_name")[0]["comp_name"]
-        comps_to_replace = Replace.objects.values("comp_name", "in_stock")
+        comps_to_replace = Replace.objects.values("id", "comp_name", "in_stock")
 
         return Response({"status": 400, "comp_to_replace": comp_name, "comp_data": comps_to_replace})
 
@@ -172,8 +173,8 @@ class UpdateDBAPI(APIView):
 
 class AddNewDeviceAPI(APIView):
     def get(self, request):
-        components = Components.objects.values_list("comp_name", flat=True)
-        # print(components)
+        components = Components.objects.values("comp_id", "comp_name")
+        print(components)
         return Response({"status": 200, "data": components})
 
     def post(self, request):
@@ -230,6 +231,7 @@ class OrdersAPIView(APIView):
         orders_id = [{"order_id": order["id"]} for order in orders]
         devices_id = [order["device_id"] for order in orders]
         amount_devices = [{"amount_devices": order["amount_devices"]} for order in orders]
+        creation_date = [{"creation_date": order["date"]} for order in orders]
 
         components_id = []
         amount_components = []
@@ -265,12 +267,13 @@ class OrdersAPIView(APIView):
         for i in range(len(component_names)):
             for j in range(len(component_names[i])):
                 component_data.append(component_names[i][j] | amount_components[i][j])
-            components_data.append({"com_data": component_data})
+            components_data.append({"comp_data": component_data})
             component_data = []
 
         orders_data = []
         for i in range(len(orders_id)):
-            order_data = orders_id[i] | devices_name[i] | amount_devices[i] | components_data[i]
+            creation_date[i]["creation_date"] = str(creation_date[i]["creation_date"])[:10] + " " + str(creation_date[i]["creation_date"])[11:16]
+            order_data = orders_id[i] | devices_name[i] | amount_devices[i] | creation_date[i] | components_data[i]
             orders_data.append(order_data)
             order_data = []
 
