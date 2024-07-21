@@ -71,7 +71,7 @@ class DeviceAPI(APIView):
 
         data = OrderData.objects.all()
         data.delete()
-        print(amount_need_all, type(amount_need_all[0]))
+        print(amount_need_all)
         for i in range(len(amount_need_all)):
             data_instance = OrderData.objects.create(comp_name=comps_data[i][0], in_stock=comps_data[i][1], amount_need=amount_need_all[i], cat=comps_data[i][2], enough=1, order_id=order.id)
             data_instance.save()
@@ -141,6 +141,20 @@ class ReplaceAPI(APIView):
             return redirect("show")
         return Response({"status": 400, "response": "Data is not valid"})
 
+
+class UpdateComponentAPI(APIView):
+    def post(self, request):
+        serializer = UpdateComponentSerializer(data=request.data)
+        if serializer.is_valid():
+            component = Components.objects.get(comp_name=request.data["comp_name"])
+            new_amount = component.amount + request.data["amount_add"]
+            Components.objects.filter(comp_name=request.data["comp_name"]).update(amount=new_amount)
+
+            # print(component)
+            return Response({"status": 200})
+        return Response({"status": 400, "response": "Data is not valid"})
+
+
 class UpdateDBAPI(APIView):
     # permission_classes = (IsAuthenticated,)
     def get(self, request):
@@ -152,7 +166,7 @@ class UpdateDBAPI(APIView):
         for comp in request.data:
             serializer = UpdateSerializer(data=comp)
             # if serializer.is_valid():
-            if True:
+            if serializer.is_valid():
                 amount_add = int(comp["amount_add"])
                 try:
                     comp_name = comp["comp_name"]
@@ -166,9 +180,10 @@ class UpdateDBAPI(APIView):
                     Components.objects.create(comp_name=comp["comp_name"], category=category, amount=comp["amount_add"])
                     print("Success new ")
 
-
+            else:
             # return redirect("home")
-        return Response({"status": 400, "response": "Invalid request data"})
+                return Response({"status": 400, "response": "Invalid request data"})
+        return Response({"status": 200, "response": "Data was successfully added!"})
 
 
 class AddNewDeviceAPI(APIView):

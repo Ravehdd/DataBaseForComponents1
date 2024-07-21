@@ -64,7 +64,7 @@ class Replace(models.Model):
 
 
 class Orders(models.Model):
-    device = models.ForeignKey("Devices", on_delete=models.PROTECT)
+    device = models.ForeignKey("Devices", on_delete=models.CASCADE)
     amount_devices = models.IntegerField()
     date = models.DateTimeField(auto_now_add=True, null=True)
 

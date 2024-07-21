@@ -39,6 +39,11 @@ class CompDataSerializer(serializers.Serializer):
     amount_need = serializers.IntegerField()
 
 
+class UpdateComponentSerializer(serializers.Serializer):
+    comp_name = serializers.CharField()
+    amount_add = serializers.IntegerField()
+
+
 class AddNewDeviceSerializer(serializers.Serializer):
     device_name = serializers.CharField()
     comp_data = CompDataSerializer(many=True)
