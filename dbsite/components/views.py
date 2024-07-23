@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import *
 from .utils import *
+
 import sqlite3
 from django.views.decorators.cache import cache_page
 from django.core.cache import cache
@@ -36,11 +37,11 @@ class CompAPIView(generics.ListAPIView):
         # print(data)
         # cache.set("comp_list", data, 60)
         # return Response(data)
-    # permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, )
 
 
 class DeviceAPI(APIView):
-    # permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         values = Devices.objects.values_list("device_name", flat=True)
@@ -70,7 +71,7 @@ class DeviceAPI(APIView):
 
         data = OrderData.objects.all()
         data.delete()
-        print(amount_need_all, type(amount_need_all[0]))
+        print(amount_need_all)
         for i in range(len(amount_need_all)):
             data_instance = OrderData.objects.create(comp_name=comps_data[i][0], in_stock=comps_data[i][1], amount_need=amount_need_all[i], cat=comps_data[i][2], enough=1, order_id=order.id)
             data_instance.save()
@@ -79,7 +80,7 @@ class DeviceAPI(APIView):
 
 
 class ShowOrderAPI(APIView):
-    # permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
     def get(self, request):
         info = OrderData.objects.all()
         comp_name = []
@@ -112,15 +113,15 @@ class ShowOrderAPI(APIView):
             OrderData.objects.filter(comp_name=comp_name[i]).update(in_stock=amount)
             Components.objects.filter(comp_name=comp_name[i]).update(amount=amount)
 
-        return Response({"order_data": ShowSerializer(info, many=True).data})
+        return Response({"status": 200, "order_data": ShowSerializer(info, many=True).data})
 
 
 class ReplaceAPI(APIView):
-    # permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, )
     def get(self, request):
         # comps_to_replace = Replace.objects.all().values_list("comp_name", flat=True)
         comp_name = OrderData.objects.filter(enough=0).values("comp_name")[0]["comp_name"]
-        comps_to_replace = Replace.objects.values("comp_name", "in_stock")
+        comps_to_replace = Replace.objects.values("id", "comp_name", "in_stock")
 
         return Response({"status": 400, "comp_to_replace": comp_name, "comp_data": comps_to_replace})
 
@@ -140,8 +141,24 @@ class ReplaceAPI(APIView):
             return redirect("show")
         return Response({"status": 400, "response": "Data is not valid"})
 
+
+class UpdateComponentAPI(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request):
+        serializer = UpdateComponentSerializer(data=request.data)
+        if serializer.is_valid():
+            component = Components.objects.get(comp_name=request.data["comp_name"])
+            new_amount = component.amount + request.data["amount_add"]
+            Components.objects.filter(comp_name=request.data["comp_name"]).update(amount=new_amount)
+
+            # print(component)
+            return Response({"status": 200})
+        return Response({"status": 400, "response": "Data is not valid"})
+
+
 class UpdateDBAPI(APIView):
-    # permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
     def get(self, request):
         values = Components.objects.values_list("comp_name", flat=True)
         categories = Category.objects.values_list("cat_name", flat=True)
@@ -151,7 +168,7 @@ class UpdateDBAPI(APIView):
         for comp in request.data:
             serializer = UpdateSerializer(data=comp)
             # if serializer.is_valid():
-            if True:
+            if serializer.is_valid():
                 amount_add = int(comp["amount_add"])
                 try:
                     comp_name = comp["comp_name"]
@@ -165,15 +182,18 @@ class UpdateDBAPI(APIView):
                     Components.objects.create(comp_name=comp["comp_name"], category=category, amount=comp["amount_add"])
                     print("Success new ")
 
-
+            else:
             # return redirect("home")
-        return Response({"status": 400, "response": "Invalid request data"})
+                return Response({"status": 400, "response": "Invalid request data"})
+        return Response({"status": 200, "response": "Data was successfully added!"})
 
 
 class AddNewDeviceAPI(APIView):
+    permission_classes = (IsAuthenticated, )
+
     def get(self, request):
-        components = Components.objects.values_list("comp_name", flat=True)
-        # print(components)
+        components = Components.objects.values("comp_id", "comp_name")
+        print(components)
         return Response({"status": 200, "data": components})
 
     def post(self, request):
@@ -224,12 +244,15 @@ class AddNewDeviceAPI(APIView):
 
 
 class OrdersAPIView(APIView):
+    permission_classes = (IsAuthenticated, )
+
     def get(self, request):
         orders = Orders.objects.all().values()
 
         orders_id = [{"order_id": order["id"]} for order in orders]
         devices_id = [order["device_id"] for order in orders]
         amount_devices = [{"amount_devices": order["amount_devices"]} for order in orders]
+        creation_date = [{"creation_date": order["date"]} for order in orders]
 
         components_id = []
         amount_components = []
@@ -265,12 +288,13 @@ class OrdersAPIView(APIView):
         for i in range(len(component_names)):
             for j in range(len(component_names[i])):
                 component_data.append(component_names[i][j] | amount_components[i][j])
-            components_data.append({"com_data": component_data})
+            components_data.append({"comp_data": component_data})
             component_data = []
 
         orders_data = []
         for i in range(len(orders_id)):
-            order_data = orders_id[i] | devices_name[i] | amount_devices[i] | components_data[i]
+            creation_date[i]["creation_date"] = str(creation_date[i]["creation_date"])[:10] + " " + str(creation_date[i]["creation_date"])[11:16]
+            order_data = orders_id[i] | devices_name[i] | amount_devices[i] | creation_date[i] | components_data[i]
             orders_data.append(order_data)
             order_data = []
 
