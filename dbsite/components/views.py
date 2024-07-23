@@ -37,11 +37,11 @@ class CompAPIView(generics.ListAPIView):
         # print(data)
         # cache.set("comp_list", data, 60)
         # return Response(data)
-    # permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, )
 
 
 class DeviceAPI(APIView):
-    # permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         values = Devices.objects.values_list("device_name", flat=True)
@@ -80,7 +80,7 @@ class DeviceAPI(APIView):
 
 
 class ShowOrderAPI(APIView):
-    # permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
     def get(self, request):
         info = OrderData.objects.all()
         comp_name = []
@@ -117,7 +117,7 @@ class ShowOrderAPI(APIView):
 
 
 class ReplaceAPI(APIView):
-    # permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated, )
     def get(self, request):
         # comps_to_replace = Replace.objects.all().values_list("comp_name", flat=True)
         comp_name = OrderData.objects.filter(enough=0).values("comp_name")[0]["comp_name"]
@@ -143,6 +143,8 @@ class ReplaceAPI(APIView):
 
 
 class UpdateComponentAPI(APIView):
+    permission_classes = (IsAuthenticated, )
+
     def post(self, request):
         serializer = UpdateComponentSerializer(data=request.data)
         if serializer.is_valid():
@@ -156,7 +158,7 @@ class UpdateComponentAPI(APIView):
 
 
 class UpdateDBAPI(APIView):
-    # permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
     def get(self, request):
         values = Components.objects.values_list("comp_name", flat=True)
         categories = Category.objects.values_list("cat_name", flat=True)
@@ -187,6 +189,8 @@ class UpdateDBAPI(APIView):
 
 
 class AddNewDeviceAPI(APIView):
+    permission_classes = (IsAuthenticated, )
+
     def get(self, request):
         components = Components.objects.values("comp_id", "comp_name")
         print(components)
@@ -240,6 +244,8 @@ class AddNewDeviceAPI(APIView):
 
 
 class OrdersAPIView(APIView):
+    permission_classes = (IsAuthenticated, )
+
     def get(self, request):
         orders = Orders.objects.all().values()
 
