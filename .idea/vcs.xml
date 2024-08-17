@@ -2,6 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/RadComponentsFront/RadComponentsFornt" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/RadElements/radelements" vcs="Git" />
   </component>
 </project>

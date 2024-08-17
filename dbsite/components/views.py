@@ -299,3 +299,33 @@ class OrdersAPIView(APIView):
             order_data = []
 
         return Response(orders_data)
+
+
+class DeviceSpecsAPiView(APIView):
+    def get(self, request):
+        devices = Devices.objects.all().values()
+        components_id = []
+        components_need = []
+
+        for device in devices:
+            components = Connection.objects.filter(device_id=device["device_id"]).values("comp_id")
+            components_id.append([component["comp_id"] for component in components])
+
+            components_need_1 = Connection.objects.filter(device_id=device["device_id"]).values('amount_need')
+            components_need.append(components_need_1)
+        component_names = []
+        for component_id in components_id:
+            component_names.append(Components.objects.filter(comp_id__in=component_id).values("comp_name"))
+
+        component_data = []
+        components_data = []
+        for i in range(len(component_names)):
+            for j in range(len(component_names[i])):
+                component_data.append(component_names[i][j] | components_need[i][j])
+            components_data.append({"comp_data": component_data})
+            component_data = []
+        data = []
+        for i in range(len(devices)):
+            data.append(devices[i] | components_data[i])
+
+        return Response(data)

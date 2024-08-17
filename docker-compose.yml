@@ -1,9 +1,9 @@
 version: "3.9"
 
 services:
-  db_fc:
+  db_fc_new:
     image: postgres:latest
-    container_name: db_fc
+    container_name: db_fc_new
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
@@ -15,12 +15,12 @@ services:
     command: postgres -c listen_addresses='*'
 #    env_file:
 #      - .env
-  rad_components:
+  rad_components_new:
     build:
 #      dockerfile: djsite/Dockerfile
       context: ./dbsite
     depends_on:
-      - db_fc
+      - db_fc_new
     ports:
       - "8000:8000"
 #    image: downloader
@@ -65,12 +65,14 @@ services:
 #      dockerfile: Dockerfile.apache
 #    ports:
 #      - "8080:8080"
-#  frontend:
-#    build:
-#      context: ./RadElements/radelements
-##      dockerfile: Dockerfile
-#    ports:
-#      - "3000:3000"
+  frontend_new:
+    build:
+      context: ./RadComponentsFront/RadComponentsFornt
+#      dockerfile: Dockerfile
+    environment:
+      - HOST=0.0.0.0
+    ports:
+      - "5173:5173"
 
 volumes:
   postgres_data:
