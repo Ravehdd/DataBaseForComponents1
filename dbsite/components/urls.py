@@ -27,6 +27,7 @@ urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path("api/v1/orders/", OrdersAPIView.as_view(), name="orders"),
     path("api/v1/add-comp-amount/", UpdateComponentAPI.as_view(), name="add-comp-amount"),
+    path("api/v1/devices-specs/", DeviceSpecsAPiView.as_view(), name="specs"),
     path("api/v1/drf_auth/", include("rest_framework.urls")),
     path("api/v1/auth/", include("djoser.urls")),
     re_path(r"^auth/", include("djoser.urls.authtoken")),#opopooppppo
