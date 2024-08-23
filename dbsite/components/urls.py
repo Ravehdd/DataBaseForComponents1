@@ -19,6 +19,8 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path("api/v1/complist/", CompAPIView.as_view(), name="home"),
+    path("api/v1/consumlist/", ConsAPIView.as_view()),
+    # path("api/v1/sortlist/", SortedComps.as_view()),
     path("api/v1/add/", DeviceAPI.as_view(), name="device"),
     path("api/v1/show/", ShowOrderAPI.as_view(), name="show"),
     path("api/v1/replace/", ReplaceAPI.as_view(), name="replace"),
