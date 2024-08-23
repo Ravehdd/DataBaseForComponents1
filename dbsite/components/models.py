@@ -73,3 +73,8 @@ class ReplacedComponents(models.Model):
     order = models.ForeignKey("Orders", on_delete=models.CASCADE)
     old_comp = models.IntegerField()
     new_comp = models.ForeignKey("Components", on_delete=models.PROTECT, null=False)
+
+
+class Consumables(models.Model):
+    comp_id = models.AutoField(primary_key=True)
+    comp_name = models.CharField(max_length=255)
