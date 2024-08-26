@@ -5,12 +5,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import *
 from .utils import *
-from django.db.models import QuerySet
-
-import sqlite3
-from django.views.decorators.cache import cache_page
-from django.core.cache import cache
-
 
 # class MoveDataAPI(APIView):
 #     def get(self, request):
@@ -77,7 +71,6 @@ class DeviceAPI(APIView):
         serializer.is_valid()
         name = request.data["device_name"]
         device_need = request.data["device_need"]
-        print(request.data)
         device_id = Devices.objects.get(device_name=name).device_id
         connection_data = Connection.objects.filter(device_id=device_id).values()
 
@@ -94,7 +87,6 @@ class DeviceAPI(APIView):
 
         data = OrderData.objects.all()
         data.delete()
-        print(amount_need_all)
         for i in range(len(amount_need_all)):
             data_instance = OrderData.objects.create(comp_name=comps_data[i][0], in_stock=comps_data[i][1], amount_need=amount_need_all[i], cat=comps_data[i][2], enough=1, order_id=order.id)
             data_instance.save()
@@ -105,17 +97,19 @@ class DeviceAPI(APIView):
 class ShowOrderAPI(APIView):
     permission_classes = (IsAuthenticated,)
     def get(self, request):
-        info = OrderData.objects.all().values("id", "comp_name", "in_stock", "amount_need", "cat")
-        sorted_info = []
+
+        sorted_sorted_info = []
 
         category_ids = [1, 5, 3, 6, 2, 4, 9, 7, 8, 10]
         i = 0
         for cat_id in category_ids:
-            for component in info:
-                if component["cat"] == cat_id:
-                    component["id"] = i
-                    i += 1
-                    sorted_info.append(component)
+            info = OrderData.objects.filter(cat=cat_id).values("id", "comp_name", "in_stock", "amount_need", "cat")
+            sorted_list = sorted(info, key=lambda x: x["comp_name"])
+            for s in sorted_list:
+                s["id"] = i
+                i += 1
+                sorted_sorted_info.append(s)
+
 
         comp_name = []
         in_stock = []
@@ -127,7 +121,7 @@ class ShowOrderAPI(APIView):
             in_stock.append(component["in_stock"])
             amount_need.append(component["amount_need"])
             cat.append(component["cat"])
-        print(sorted_info)
+        # print(sorted_info)
 
         for i in range(len(in_stock)):
             if in_stock[i] < amount_need[i]:
@@ -143,13 +137,13 @@ class ShowOrderAPI(APIView):
 
         for i in range(len(comp_name)):
             amount = Components.objects.filter(comp_name=comp_name[i]).values("amount")[0]["amount"]
-            print(amount)
+            # print(amount)
             amount -= amount_need[i]
             OrderData.objects.filter(comp_name=comp_name[i]).update(in_stock=amount)
             Components.objects.filter(comp_name=comp_name[i]).update(amount=amount)
 
         # return Response({"status": 200, "order_data": ShowSerializer(info, many=True).data})
-        return Response({"status": 200, "order_data": sorted_info})
+        return Response({"status": 200, "order_data": sorted_sorted_info})
 
 
 class ReplaceAPI(APIView):
@@ -168,7 +162,7 @@ class ReplaceAPI(APIView):
             new_comp_id = Components.objects.filter(comp_name=comp_name).values("comp_id")[0]["comp_id"]
             old_comp = OrderData.objects.filter(enough=0).values("comp_name")[0]["comp_name"]
             old_comp_id = Components.objects.filter(comp_name=old_comp).values("comp_id")[0]["comp_id"]
-            print(old_comp_id)
+            # print(old_comp_id)
             order_id = OrderData.objects.get(comp_name=old_comp).order_id
             ReplacedComponents.objects.create(new_comp_id=new_comp_id, old_comp=old_comp_id, order_id=order_id)
 
@@ -216,7 +210,7 @@ class UpdateDBAPI(APIView):
                     component = Category.objects.get(cat_name=comp["category"])
                     category = component
                     Components.objects.create(comp_name=comp["comp_name"], category=category, amount=comp["amount_add"])
-                    print("Success new ")
+                    # print("Success new ")
 
             else:
             # return redirect("home")
@@ -248,7 +242,6 @@ class AddNewDeviceAPI(APIView):
             # try:
             device = Devices.objects.filter(device_name=device_name)
             if device:
-                # print(device)
                 return Response({"status": 400, "response": "Device already exists"})
             # except :
             else:
@@ -273,8 +266,9 @@ class AddNewDeviceAPI(APIView):
     def put(self, request):
         serializer = UpdateDeviceSerializer(data=request.data)
         if serializer.is_valid():
+            comp_data = sorted(request.data["comp_data"], key=lambda x: x["comp_id"])
             components = Connection.objects.filter(device_id=request.data["device_id"]).delete()
-            for component in request.data["comp_data"]:
+            for component in comp_data:
                 data = Connection.objects.create(device_id=request.data["device_id"], comp_id=component["comp_id"], amount_need=component["amount_need"])
                 data.save()
             return Response({"status": "200"})
@@ -340,15 +334,27 @@ class OrdersAPIView(APIView):
 
         component_names = []
         for component_id in components_id:
-            component_names.append(Components.objects.filter(comp_id__in=component_id).values("comp_name"))
+            component_names.append(Components.objects.filter(comp_id__in=component_id).values("comp_name", "category_id"))
 
         component_data = []
         components_data = []
+        sorted_sorted_component_data = []
         for i in range(len(component_names)):
             for j in range(len(component_names[i])):
                 component_data.append(component_names[i][j] | amount_components[i][j])
-            components_data.append({"comp_data": component_data})
+            sorted_component_data = sorted(component_data, key=lambda x: x["comp_name"])
+            category_ids = [1, 5, 3, 6, 2, 4, 9, 7, 8, 10]
+            for cat_id in category_ids:
+                for component in sorted_component_data:
+                    if component["category_id"] == cat_id:
+                        component["id"] = i
+                        i += 1
+                        sorted_sorted_component_data.append(component)
+
+            components_data.append({"comp_data": sorted_sorted_component_data})
             component_data = []
+            sorted_component_data = []
+            sorted_sorted_component_data = []
 
         orders_data = []
         for i in range(len(orders_id)):
@@ -379,17 +385,25 @@ class DeviceSpecsAPiView(APIView):
             components_data_id.append([{"comp_id": comp_id} for comp_id in component_id])
             component_names.append(Components.objects.filter(comp_id__in=component_id).values("comp_name"))
 
+
         component_data = []
         components_data = []
+
+
 
         for i in range(len(component_names)):
             for j in range(len(component_names[i])):
                 component_data.append(components_data_id[i][j] | component_names[i][j] | components_need[i][j])
+
             components_data.append({"comp_data": component_data})
             component_data = []
         data = []
+
+
         for i in range(len(devices)):
             data.append(devices[i] | components_data[i])
+
+        # print(data)
 
         return Response(data)
 
